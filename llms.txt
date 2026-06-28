@@ -1,0 +1,38 @@
+# QR 코드 생성기 (QR Code Generator)
+
+> URL·텍스트를 QR 코드로 즉시 변환해 PNG·SVG로 무료 다운로드하는 웹 도구. 워터마크 없음, 서버 전송 없음(브라우저에서만 동작). 한·영·일·중(간체/번체)·스페인어 지원.
+
+URL: https://hanariago.github.io/tool-qr-generator/
+
+## 개요
+- 입력한 URL이나 텍스트를 실시간으로 QR 코드로 변환한다.
+- 모든 처리는 사용자의 브라우저에서만 일어나며, 입력 내용·생성 이미지는 서버로 전송되지 않는다.
+- 회원가입·설치 불필요. 완전 무료, 생성 횟수 제한 없음, 워터마크 없음.
+
+## 기능
+- 실시간 QR 코드 미리보기
+- 다운로드 크기 선택: 128 / 256 / 512 / 1024px
+- 전경색·배경색 커스터마이징, 배경 투명 옵션
+- 오류 보정 레벨 선택: L(7%) / M(15%) / Q(25%) / H(30%)
+- 여백(quiet zone) 조절
+- PNG 다운로드 (워터마크 없음, 무제한)
+- SVG 벡터 다운로드 (인쇄·확대용, 화질 손실 없음)
+- 이미지 클립보드 복사
+- 다국어 UI (ko, en, ja, zh-Hans, zh-Hant, es)
+
+## FAQ
+- 무료인가? 워터마크가 붙나? → 완전 무료, 워터마크 없음, 횟수 제한 없음. 상업적 사용 가능.
+- 입력 내용이 서버로 전송되나? → 전송되지 않음. 전적으로 브라우저에서만 생성.
+- PNG vs SVG? → 화면·SNS는 PNG, 인쇄·확대는 화질 손실 없는 SVG 권장.
+- 오류 보정 레벨이란? → QR 손상·가림에 대한 복원 능력. 로고 삽입 시 H 권장.
+- 색상 변경 시 인식? → 전경/배경 명암 대비가 충분해야 함.
+
+## 기술
+- 순수 HTML/CSS/JS 단일 파일
+- QR 생성: node-qrcode (MIT License)
+- 라이선스: MIT
+
+## 링크
+- 도구: https://hanariago.github.io/tool-qr-generator/
+- 소스: https://github.com/hanariago/tool-qr-generator
+- 다른 도구 모음: https://hanariago.github.io/tools-hub/
