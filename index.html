@@ -761,20 +761,26 @@ function copyImage(){
   });
 }
 
-/* ---------- 첫 방문 가이드 모달 ---------- */
-function todayStr(){
-  var d = new Date();
-  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-}
+/* ---------- 첫 방문 가이드 모달 ----------
+   ⚠️ 키 접두어 'qrgen' 필수: 모든 도구가 같은 origin(hanariago.github.io)이라
+   localStorage·sessionStorage가 공유됨 → generic 키 쓰면 다른 도구와 충돌 */
+var GUIDE_HIDE_KEY = "qrgenGuideHide";   // localStorage: '오늘 다시 보지 않기' 날짜
+var GUIDE_SEEN_KEY = "qrgenGuideSeen";   // sessionStorage: 이번 세션에 봤음
+function todayStr(){ return new Date().toISOString().slice(0,10); } // YYYY-MM-DD
 function openGuide(){ $("guideModal").classList.add("show"); }
 function closeGuide(){
   if($("guideDontShow").checked){
-    localStorage.setItem("qrgen.guideHideDate", todayStr());
+    try{ localStorage.setItem(GUIDE_HIDE_KEY, todayStr()); }catch(e){}
   }
+  try{ sessionStorage.setItem(GUIDE_SEEN_KEY, "1"); }catch(e){}
   $("guideModal").classList.remove("show");
 }
 function maybeShowGuide(){
-  if(localStorage.getItem("qrgen.guideHideDate") === todayStr()) return;
+  var hide=null, seen=null;
+  try{ hide = localStorage.getItem(GUIDE_HIDE_KEY); }catch(e){}
+  try{ seen = sessionStorage.getItem(GUIDE_SEEN_KEY); }catch(e){}
+  // 오늘 '다시 보지 않기' 했거나, 이번 세션에 이미 봤으면 표시 안 함
+  if(hide === todayStr() || seen) return;
   openGuide();
 }
 
