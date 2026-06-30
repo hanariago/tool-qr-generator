@@ -231,6 +231,45 @@
     padding:11px 20px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* 첫 방문 가이드 모달 */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(26,24,20,.45);backdrop-filter:blur(2px);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:100;
+    opacity:0;transition:opacity .2s ease;
+  }
+  .modal-overlay.show{display:flex;opacity:1}
+  .modal{
+    position:relative;background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    box-shadow:0 12px 48px rgba(26,24,20,.22);max-width:440px;width:100%;padding:30px 26px 22px;
+    transform:translateY(12px) scale(.98);transition:transform .22s ease;
+  }
+  .modal-overlay.show .modal{transform:translateY(0) scale(1)}
+  .modal-x{
+    position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;background:none;cursor:pointer;
+    color:var(--text-muted);font-size:1.5rem;line-height:1;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  }
+  .modal-x:hover{background:var(--accent-light);color:var(--text-primary)}
+  .modal h2{font-size:1.3rem;font-weight:800;letter-spacing:-.01em;padding-right:30px;display:flex;align-items:center;gap:9px}
+  .modal h2 .logo{width:28px;height:28px;flex:none}
+  .modal .modal-desc{color:var(--text-secondary);font-size:.95rem;margin-top:10px}
+  .modal ul{list-style:none;margin:18px 0 6px;display:flex;flex-direction:column;gap:12px}
+  .modal ul li{position:relative;padding-left:30px;font-size:.94rem;color:var(--text-primary);line-height:1.5}
+  .modal ul li::before{
+    content:"";position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:7px;
+    background:var(--accent-light);border:1px solid #D4E4DE;
+  }
+  .modal ul li .num{position:absolute;left:0;top:1px;width:21px;height:21px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:.75rem;font-weight:800}
+  .modal-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+  .modal-dontshow{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.86rem;color:var(--text-secondary);user-select:none}
+  .modal-dontshow input{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex:none}
+  .modal-foot .btn{min-height:42px;padding:11px 24px;flex:none}
+  @media(max-width:480px){
+    .modal{padding:26px 20px 18px}
+    .modal-foot{flex-direction:column-reverse;align-items:stretch;gap:12px}
+    .modal-foot .btn{width:100%}
+    .modal-dontshow{justify-content:center}
+  }
 </style>
 </head>
 <body>
@@ -361,6 +400,26 @@
   </footer>
 </div>
 
+<!-- 첫 방문 가이드 모달 -->
+<div class="modal-overlay" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitleEl">
+  <div class="modal">
+    <button class="modal-x" id="guideX" aria-label="Close" title="Close">&times;</button>
+    <h2 id="guideTitleEl">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#3D6B5E"/><g fill="#fff"><rect x="6" y="6" width="7" height="7" rx="1.5"/><rect x="19" y="6" width="7" height="7" rx="1.5"/><rect x="6" y="19" width="7" height="7" rx="1.5"/><rect x="8.5" y="8.5" width="2" height="2" fill="#3D6B5E"/><rect x="21.5" y="8.5" width="2" height="2" fill="#3D6B5E"/><rect x="8.5" y="21.5" width="2" height="2" fill="#3D6B5E"/><rect x="17" y="17" width="3" height="3"/><rect x="22" y="17" width="3" height="3"/><rect x="17" y="22" width="3" height="3"/><rect x="22" y="22" width="3" height="3"/></g></svg>
+      <span data-i18n="guideTitle">QR 코드 생성기에 오신 걸 환영해요</span>
+    </h2>
+    <p class="modal-desc" data-i18n="guideDesc">URL이나 텍스트를 QR 코드로 만들고 무료로 내려받을 수 있어요. 이렇게 쓰면 됩니다:</p>
+    <ul id="guideSteps"></ul>
+    <div class="modal-foot">
+      <label class="modal-dontshow">
+        <input type="checkbox" id="guideDontShow">
+        <span data-i18n="guideDontShow">오늘 다시 보지 않기</span>
+      </label>
+      <button class="btn primary" id="guideClose" data-i18n="guideClose">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -387,7 +446,16 @@ var I18N = {
       ["오류 보정 레벨은 무엇인가요?","QR 코드가 일부 손상되거나 가려져도 인식되도록 하는 복원 능력입니다. 레벨이 높을수록(H) 더 많이 손상돼도 읽히지만 패턴이 복잡해집니다. 가운데 로고를 넣을 계획이면 H를 권장합니다."],
       ["색상을 바꾸면 인식이 안 될 수도 있나요?","전경색과 배경색의 명암 대비가 충분해야 인식됩니다. 밝은 배경에 어두운 전경을 쓰고, 대비가 약한 색 조합(예: 노랑 배경에 흰색)은 피하세요."]
     ],
-    footerLicense:"오픈소스 · MIT 라이선스", footerHub:"🔧 다른 도구 모음 →"
+    footerLicense:"오픈소스 · MIT 라이선스", footerHub:"🔧 다른 도구 모음 →",
+    guideTitle:"QR 코드 생성기에 오신 걸 환영해요",
+    guideDesc:"URL이나 텍스트를 QR 코드로 만들고 무료로 내려받을 수 있어요. 이렇게 쓰면 됩니다:",
+    guideSteps:[
+      "왼쪽 입력창에 URL이나 텍스트를 입력하면 QR 코드가 바로 만들어져요.",
+      "크기·색상·오류 보정 레벨·여백을 원하는 대로 조절하세요.",
+      "PNG 또는 SVG로 내려받거나, 이미지를 클립보드에 바로 복사할 수 있어요.",
+      "모든 처리는 브라우저에서만 — 입력 내용은 서버로 전송되지 않아요."
+    ],
+    guideDontShow:"오늘 다시 보지 않기", guideClose:"닫기"
   },
   "en":{
     docTitle:"QR Code Generator - Free Online QR Maker (PNG & SVG)",
@@ -410,7 +478,16 @@ var I18N = {
       ["What is the error correction level?","It's how much damage or obstruction a QR code can survive and still be read. Higher levels (H) tolerate more damage but make the pattern denser. Choose H if you plan to place a logo in the center."],
       ["Can custom colors break scanning?","The foreground and background need enough contrast. Keep a dark foreground on a light background and avoid low-contrast combos (e.g. white on yellow)."]
     ],
-    footerLicense:"Open source · MIT License", footerHub:"🔧 More tools →"
+    footerLicense:"Open source · MIT License", footerHub:"🔧 More tools →",
+    guideTitle:"Welcome to the QR Code Generator",
+    guideDesc:"Turn any URL or text into a QR code and download it for free. Here's how:",
+    guideSteps:[
+      "Type a URL or text in the box on the left — the QR code appears instantly.",
+      "Adjust the size, colors, error correction level and margin however you like.",
+      "Download as PNG or SVG, or copy the image straight to your clipboard.",
+      "Everything runs in your browser — your input is never sent to a server."
+    ],
+    guideDontShow:"Don't show again today", guideClose:"Close"
   },
   "ja":{
     docTitle:"QRコード作成 - 無料オンラインQRコードジェネレーター (PNG・SVG)",
@@ -433,7 +510,16 @@ var I18N = {
       ["誤り訂正レベルとは？","QRコードが一部破損・遮蔽されても読み取れる復元能力です。レベルが高い(H)ほど多少の破損でも読めますがパターンは複雑になります。中央にロゴを入れる場合はHがおすすめです。"],
       ["色を変えると読み取れなくなりますか？","前景色と背景色のコントラストが十分必要です。明るい背景に暗い前景を使い、コントラストの弱い組み合わせ（例：黄色地に白）は避けてください。"]
     ],
-    footerLicense:"オープンソース · MITライセンス", footerHub:"🔧 他のツール →"
+    footerLicense:"オープンソース · MITライセンス", footerHub:"🔧 他のツール →",
+    guideTitle:"QRコード作成へようこそ",
+    guideDesc:"URLやテキストをQRコードにして無料でダウンロードできます。使い方：",
+    guideSteps:[
+      "左の入力欄にURLやテキストを入力すると、QRコードがすぐに作成されます。",
+      "サイズ・色・誤り訂正レベル・余白を自由に調整できます。",
+      "PNGまたはSVGでダウンロード、または画像をクリップボードに直接コピーできます。",
+      "すべてブラウザ内で処理 — 入力内容がサーバーに送信されることはありません。"
+    ],
+    guideDontShow:"今日はもう表示しない", guideClose:"閉じる"
   },
   "zh-Hans":{
     docTitle:"二维码生成器 - 免费在线制作二维码 (PNG·SVG)",
@@ -456,7 +542,16 @@ var I18N = {
       ["什么是纠错级别？","它表示二维码在部分损坏或遮挡时仍能被识别的能力。级别越高（H）越耐损坏，但图案更密集。若要在中间放置 logo，建议选 H。"],
       ["改变颜色会导致无法扫描吗？","前景色与背景色需要足够的对比度。请在浅色背景上使用深色前景，避免对比度低的组合（如黄底白色）。"]
     ],
-    footerLicense:"开源 · MIT 许可证", footerHub:"🔧 更多工具 →"
+    footerLicense:"开源 · MIT 许可证", footerHub:"🔧 更多工具 →",
+    guideTitle:"欢迎使用二维码生成器",
+    guideDesc:"将网址或文本生成二维码并免费下载。使用方法：",
+    guideSteps:[
+      "在左侧输入框填入网址或文本，二维码会立即生成。",
+      "可自由调整尺寸、颜色、纠错级别和边距。",
+      "下载为 PNG 或 SVG，或将图片直接复制到剪贴板。",
+      "全部在浏览器中处理 — 输入内容不会发送到服务器。"
+    ],
+    guideDontShow:"今天不再显示", guideClose:"关闭"
   },
   "zh-Hant":{
     docTitle:"QR Code 產生器 - 免費線上製作 QR Code (PNG·SVG)",
@@ -479,7 +574,16 @@ var I18N = {
       ["什麼是錯誤更正等級？","它代表 QR Code 在部分損壞或遮擋時仍能被辨識的能力。等級越高（H）越耐損壞，但圖案更密集。若要在中間放置 logo，建議選 H。"],
       ["改變顏色會導致無法掃描嗎？","前景色與背景色需要足夠的對比度。請在淺色背景上使用深色前景，避免對比度低的組合（如黃底白色）。"]
     ],
-    footerLicense:"開源 · MIT 授權", footerHub:"🔧 更多工具 →"
+    footerLicense:"開源 · MIT 授權", footerHub:"🔧 更多工具 →",
+    guideTitle:"歡迎使用 QR Code 產生器",
+    guideDesc:"將網址或文字產生 QR Code 並免費下載。使用方法：",
+    guideSteps:[
+      "在左側輸入框填入網址或文字，QR Code 會立即產生。",
+      "可自由調整尺寸、顏色、錯誤更正等級與邊界。",
+      "下載為 PNG 或 SVG，或將圖片直接複製到剪貼簿。",
+      "全部在瀏覽器中處理 — 輸入內容不會傳送到伺服器。"
+    ],
+    guideDontShow:"今天不再顯示", guideClose:"關閉"
   },
   "es":{
     docTitle:"Generador de Códigos QR - Crear QR Gratis Online (PNG y SVG)",
@@ -502,7 +606,16 @@ var I18N = {
       ["¿Qué es el nivel de corrección de errores?","Es cuánto daño u obstrucción puede soportar un código QR y seguir siendo legible. Los niveles altos (H) toleran más daño pero hacen el patrón más denso. Elige H si vas a poner un logo en el centro."],
       ["¿Los colores personalizados pueden impedir el escaneo?","El frente y el fondo necesitan suficiente contraste. Usa un frente oscuro sobre fondo claro y evita combinaciones de bajo contraste (p. ej. blanco sobre amarillo)."]
     ],
-    footerLicense:"Código abierto · Licencia MIT", footerHub:"🔧 Más herramientas →"
+    footerLicense:"Código abierto · Licencia MIT", footerHub:"🔧 Más herramientas →",
+    guideTitle:"Bienvenido al Generador de Códigos QR",
+    guideDesc:"Convierte cualquier URL o texto en un código QR y descárgalo gratis. Así funciona:",
+    guideSteps:[
+      "Escribe una URL o texto en el cuadro de la izquierda: el código QR aparece al instante.",
+      "Ajusta el tamaño, los colores, el nivel de corrección de errores y el margen a tu gusto.",
+      "Descárgalo como PNG o SVG, o copia la imagen directamente al portapapeles.",
+      "Todo se procesa en tu navegador: tu contenido nunca se envía a un servidor."
+    ],
+    guideDontShow:"No mostrar hoy de nuevo", guideClose:"Cerrar"
   }
 };
 var OG_LOCALE = { "ko":"ko_KR","en":"en_US","ja":"ja_JP","zh-Hans":"zh_CN","zh-Hant":"zh_TW","es":"es_ES" };
@@ -548,6 +661,17 @@ function applyLang(lang){
     var a = document.createElement("div"); a.className="ans"; a.textContent = item[1];
     d.appendChild(s); d.appendChild(a); faqBox.appendChild(d);
   });
+  // 가이드 모달 단계 렌더
+  var gs = $("guideSteps");
+  if(gs){
+    gs.innerHTML = "";
+    (t.guideSteps||[]).forEach(function(step, i){
+      var li = document.createElement("li");
+      var n = document.createElement("span"); n.className="num"; n.textContent=(i+1);
+      var sp = document.createElement("span"); sp.textContent = step;
+      li.appendChild(n); li.appendChild(sp); gs.appendChild(li);
+    });
+  }
   // copy 버튼 라벨 복구
   setCopyLabel(t.btnCopy);
   $("langSelect").value = lang;
@@ -637,6 +761,23 @@ function copyImage(){
   });
 }
 
+/* ---------- 첫 방문 가이드 모달 ---------- */
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+}
+function openGuide(){ $("guideModal").classList.add("show"); }
+function closeGuide(){
+  if($("guideDontShow").checked){
+    localStorage.setItem("qrgen.guideHideDate", todayStr());
+  }
+  $("guideModal").classList.remove("show");
+}
+function maybeShowGuide(){
+  if(localStorage.getItem("qrgen.guideHideDate") === todayStr()) return;
+  openGuide();
+}
+
 /* ---------- 토스트 ---------- */
 var toastTimer;
 function toast(msg){
@@ -678,6 +819,13 @@ function bind(){
   $("copyBtn").addEventListener("click", copyImage);
   $("resetBtn").addEventListener("click", resetAll);
   $("langSelect").addEventListener("change", function(){ applyLang(this.value); });
+  // 가이드 모달
+  $("guideX").addEventListener("click", closeGuide);
+  $("guideClose").addEventListener("click", closeGuide);
+  $("guideModal").addEventListener("click", function(e){ if(e.target === this) closeGuide(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && $("guideModal").classList.contains("show")) closeGuide();
+  });
 }
 
 /* ---------- 라이브러리 로드 (ESM CDN + 폴백) ---------- */
@@ -694,6 +842,7 @@ function loadQR(srcs){
 document.addEventListener("DOMContentLoaded", function(){
   applyLang(resolveLang());
   bind();
+  maybeShowGuide();
   loadQR([
     "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm",
     "https://esm.sh/qrcode@1.5.4",
